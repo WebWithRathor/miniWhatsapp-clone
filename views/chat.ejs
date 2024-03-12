@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+  <title>Whatsapp</title>
+  <style>
+    ::-webkit-scrollbar{
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main h-screen w-full bg-red-500 flex">
+    <div class="left h-full w-[30%] md:w-[20%] border-r border-r-3 bg-zinc-800 shrink-0 py-3 px-4">
+      <div class="head flex justify-between">
+        <h1 class="text-white md:text-base text-[2vw] font-medium">Chats</h1>
+        <div class="icons flex gap-2">
+          <i onclick="showGroupOverlay()" class="ri-group-line text-white md:text-base text-[2vw]"></i>
+          <i onclick="showuserOverlay()" class="ri-user-add-line text-white md:text-base text-[2vw]"></i>
+        </div>
+      </div>
+      <div class="type flex justify-between gap-3 w-full my-4">
+        <button onclick="showConnection('freinds')"
+          class="px-2 py-1.5 rounded bg-emerald-800 text-white md:text-lg text-sm w-1/2 font-medium">user</button>
+        <button onclick="showConnection('groups')"
+          class="px-2 py-1.5 rounded bg-emerald-800 text-white md:text-lg text-sm w-1/2 font-medium"> group</button>
+      </div>
+      <input type="text" placeholder="search.." class="text-white w-full bg-transparent rounded border px-2 py-1">
+
+      <div class="connections mt-5">
+        <% loggedInUser.freinds.forEach(function(user){%>
+          <div onclick="openChat('user','<%=user.username%>','<%=user.profileImg%>')"
+            class="user mt-3 flex gap-2 items-center ">
+            <div class="profileImg h-10 aspect-square bg-red-500 rounded-full overflow-hidden">
+              <img src="/images/<%=user.profileImg%>" alt="" class="h-full w-full object-cover">
+            </div>
+            <div class="details -mt-1">
+              <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">
+                <%=user.username%>
+              </h1>
+              <p class="leading-5  text-white md:text-xs text-[1.5vw]">Last Message</p>
+            </div>
+          </div>
+          <%})%>
+      </div>
+    </div>
+    <div class="right relative h-full w-[70%] md:w-[80%] bg-zinc-800 shrink-0">
+      <div class="home text-white flex flex-col gap-3 items-center justify-center h-full w-full">
+        <h1 class="font-medium text-[3vw]">Welcome in whatsapp</h1>
+        <p class="w-[80%] md:w-[50%]  text-center">Send and receive messages without keeping your phone online, Use
+          WhatsApp on up to 4 linked devices and 1 phone at the same time.</p>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+    socket.emit('join-server', '<%=loggedInUser.username%>');
+      let chatsOverlay = document.createElement('div');
+      chatsOverlay.className = 'h-full w-full bg-zinc-800 absolute top-0 left-0 -z-1';
+      document.querySelector('.right').appendChild(chatsOverlay);
+
+
+
+    let userOverlay;
+    function showuserOverlay() {
+      userOverlay = document.createElement("div");
+      userOverlay.className = 'h-full w-full bg-[rgba(0,0,0,0.8)] absolute top-0 left-0 flex items-center justify-center'
+      userOverlay.innerHTML = `
+      <i class="ri-close-line absolute top-5 right-5 text-lg text-white" onclick="closeuserOverlay()"></i>
+      <div class="h-[50%] w-[60%] md:w-[50%] md:h-[40%] bg-zinc-800 p-3 rounded">
+      <input oninput="searchUser(this)" type="text" placeholder="search.." class="text-white w-full bg-transparent rounded border px-2 py-1">
+      <div class="users mt-5 overflow-y-auto h-[87%]">
+        
+      </div>
+    </div>
+    `;
+      document.querySelector('.main').appendChild(userOverlay);
+    }
+
+    function closeuserOverlay() {
+      document.querySelector('.main').removeChild(userOverlay)
+    }
+    function searchUser(inp) {
+      if (inp.value !== ``) {
+        fetch(`/searchUser/${inp.value}`)
+          .then(raw => raw.json())
+          .then(function (response) {
+            userOverlay.querySelector('.users').innerHTML = '';
+            response.forEach(user => {
+              userOverlay.querySelector('.users').innerHTML += `
+              <a href="/addfreind/${user.username}">
+                <div class="user mt-3 flex gap-2 items-center ">
+                 <div class="profileImg h-10 aspect-square bg-red-500 rounded-full overflow-hidden">
+                    <img src="/images/${user.profileImg}" alt="" class="h-full w-full object-cover">
+                 </div>
+                 <div class="details -mt-1">
+                    <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${user.username}</h1>
+                   <p class="leading-5  text-white md:text-xs text-[1.5vw]">Last Message</p>
+                 </div>
+               </div>
+              </a>
+              `
+            });
+          })
+      }
+    }
+
+
+
+
+    // -----------------group
+
+
+    let GroupOverlay;
+    function showGroupOverlay(overlay) {
+      if(!overlay){
+      GroupOverlay = document.createElement("form");
+      GroupOverlay.className = 'h-full w-full bg-[rgba(0,0,0,0.8)] absolute top-0 left-0 flex items-center justify-center'
+    }
+      GroupOverlay.innerHTML = `
+      <i class="ri-close-line absolute top-5 right-5 text-lg text-white" onclick="closeGroupOverlay()"></i>
+      <div class="h-[50%] w-[60%] md:w-[30%] md:h-[50%] bg-zinc-800 p-3 flex flex-col items-center justify-center gap-3 rounded">
+    <button onclick="showGroupPanel(true)" class="px-3 py-2 rounded bg-emerald-800 text-white md:text-lg text-xl w-3/5 font-medium"> Join Group</button>
+    <button onclick="showGroupPanel(false)" class="px-3 py-2 rounded bg-emerald-800 text-white md:text-lg text-xl w-3/5 font-medium"> Create Group</button>
+  </div>
+      `;
+      document.querySelector('.main').appendChild(GroupOverlay);
+
+    }
+    function showGroupPanel(grp) {
+
+      if (grp) {
+        GroupOverlay.innerHTML = `
+      <i class="ri-close-line absolute top-5 right-5 text-lg text-white" onclick="closeGroupOverlay()"></i>
+      <div class="h-[50%] w-[60%] md:w-[50%] md:h-[40%] bg-zinc-800 p-3 rounded relative">
+      <i onclick="showGroupOverlay(true)" class="ri-arrow-left-line text-xl font-medium text-white absolute top-5 left-5"></i>
+      <input oninput="searchGroup(this)" type="text" placeholder="search.." class="text-white mt-1 w-full pl-10 bg-transparent rounded border px-2 py-1">
+      <div class="Groups mt-5">
+          
+      </div>
+    </div>
+    `;
+        fetch('/allgroups')
+          .then(raw => raw.json())
+          .then(function (groups) {
+            groups.forEach(function (group) {
+              GroupOverlay.querySelector('.Groups').innerHTML += `
+              <a href="/addgroup/${group.groupname}">
+          <div class="Group mt-3 flex gap-2 items-center ">
+          <div class="profileImg h-10 aspect-square bg-red-500 rounded-full overflow-hidden">
+            <img src="/images/${group.profileImg}" alt="" class="h-full w-full object-cover">
+            </div>
+          <div class="details -mt-1">
+            <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${group.groupname}</h1>
+          </div>
+        </div>
+          </a>`
+            })
+          })
+      } else {
+        GroupOverlay.action = '/CreateGroup'
+        GroupOverlay.innerHTML = `
+    <i class="ri-close-line absolute top-5 right-5 text-lg text-white" onclick="closeGroupOverlay()"></i>
+      <div class="h-[50%] relative w-[60%] md:w-[30%] md:h-[50%] bg-zinc-800 p-3 flex flex-col items-center justify-center gap-3 rounded">
+        <i onclick="showGroupOverlay(true)" class="ri-arrow-left-line text-xl font-medium text-white absolute top-5 left-5"></i>
+        <input name="groupName" required type="text" placeholder="search.." class="text-white w-3/5 bg-transparent rounded border px-2 py-1">
+        <button type="submit" class="px-3 py-2 rounded bg-emerald-800 text-white md:text-lg text-xl w-3/5 font-medium"> Create Group</button>
+       </div>
+    `;
+      }
+
+    }
+
+    function closeGroupOverlay() {
+      document.querySelector('.main').removeChild(GroupOverlay)
+    }
+    function searchGroup(inp) {
+      if(inp.value !== ''){
+      fetch(`/group/${inp.value}`)
+      .then(raw=>raw.json())
+      .then(function(groups){
+        GroupOverlay.querySelector('.Groups').innerHTML = '';
+        groups.forEach(function(group){
+        GroupOverlay.querySelector('.Groups').innerHTML += `
+              <a href="/addgroup/${group.groupname}">
+          <div class="Group mt-3 flex gap-2 items-center ">
+          <div class="profileImg h-10 aspect-square bg-red-500 rounded-full overflow-hidden">
+            <img src="/images/${group.profileImg}" alt="" class="h-full w-full object-cover">
+            </div>
+          <div class="details -mt-1">
+            <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${group.groupname}</h1>
+          </div>
+        </div>
+          </a>`
+        })
+      })
+    }
+    }
+
+
+    // ----------------showing Chats
+
+    let chatUser;
+    function openChat(type, username, profileImg, id) {
+     
+      if (id) {
+        socket.emit('joinGroup', {
+          groupname: username,
+          id: id
+        })
+      };
+      if(type === 'user'){
+        fetch(`/allUserchats/${username}`)
+      .then(raw=>raw.json())
+      .then(function(chats){
+        chats.forEach(function(chat){
+          if(chat.sender === '<%= loggedInUser.username %>'){
+            chatsOverlay.querySelector('.MessageSection').innerHTML +=
+        `<div class="usermsg mt-1 px-2 py-1 text-white rounded max-w-[80%] w-fit ml-auto bg-emerald-800">
+          <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${chat.message}</h1>
+        </div>`
+
+          }else{
+            chatsOverlay.querySelector('.MessageSection').innerHTML += `
+      <div class="chatmsg mt-1.5 p-2 text-white rounded  max-w-[80%] w-fit bg-zinc-600">
+         <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${chat.message}</h1>
+        </div>`
+          }
+         
+        })
+      })
+    }else{
+      fetch(`/allGroupchats/${username}`)
+      .then(raw=>raw.json())
+      .then(function(chats){
+        console.log(chats)
+        chats.forEach(function(chat){
+        if(chat.sender === '<%= loggedInUser.username %>'){
+            chatsOverlay.querySelector('.MessageSection').innerHTML +=
+        `<div class="usermsg mt-1 px-2 py-1 text-white rounded max-w-[80%] w-fit ml-auto bg-emerald-800">
+          <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${chat.message}</h1>
+        </div>`
+
+          }else{
+            chatsOverlay.querySelector('.MessageSection').innerHTML += `
+      <div class="chatmsg mt-1.5 p-2 text-white rounded  max-w-[80%] w-fit bg-zinc-600">
+         <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${chat.message}</h1>
+        </div>`
+          }
+         
+        })
+      })
+      }
+
+      chatUser = username;
+      chatUser.className+='z-3';
+      chatsOverlay.innerHTML = `
+     <div class="chatHead border-b  flex gap-2 items-center px-4 w-full h-[10vh]">
+        <div class="profileImg h-10 aspect-square bg-red-500 rounded-full overflow-hidden">
+          <img src="/images/${profileImg}" alt="" class="h-full w-full object-cover">
+          </div>
+        <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${username}</h1>
+      </div>
+      <div class="MessageSection w-full h-[83vh] overflow-y-auto pb-[5vh] p-2">
+       
+      </div>
+      <div class="messageSend w-full flex items-center relative border-t">
+        <i onclick="appendMessage('${type}','${username}')" class="ri-send-plane-fill text-white absolute right-5"></i>
+        <input type="text" required id="Message" class="h-[6vh] w-full bg-transparent p-2 text-white pr-10" placeholder="Sent a message...">
+      </div>
+     `;
+    }
+
+    function appendMessage(type, username) {
+      document.querySelector('.MessageSection').innerHTML +=
+        `<div class="usermsg mt-1 px-2 py-1 text-white rounded max-w-[80%] w-fit ml-auto bg-emerald-800">
+          <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${document.querySelector("#Message").value}</h1>
+        </div>`
+
+      if (type === 'user') {
+        socket.emit("user-sent-message", {
+          message: document.querySelector("#Message").value,
+          reciever: username,
+          sender: '<%=loggedInUser.username%>'
+        })
+      }else{
+        socket.emit("group-sent-message", {
+          message: document.querySelector("#Message").value,
+          reciever: username,
+          sender: '<%=loggedInUser.username%>'
+        })
+      }
+      document.querySelector("#Message").value = "";
+    }
+
+    // ----------------recieving messages
+
+    socket.on('user-recieved-message', function (message) {
+      if (chatsOverlay, chatUser === message.sender) {
+        chatsOverlay.querySelector('.MessageSection').innerHTML += `
+      <div class="chatmsg mt-1.5 p-2 text-white rounded  max-w-[80%] w-fit bg-zinc-600">
+         <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${message.message}</h1>
+        </div>`
+      }
+    })
+
+    socket.on('group-recieved-message',function (message) {
+      if(message.reciever === chatUser){
+        chatsOverlay.querySelector('.MessageSection').innerHTML += `
+      <div class="chatmsg mt-1.5 p-2 text-white rounded  max-w-[80%] w-fit bg-zinc-600">
+         <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${message.message}</h1>
+        </div>`
+      }
+    })
+
+
+    // ----------------- showing
+
+    function showConnection(type) {
+      document.querySelector(".left .connections").innerHTML = '';
+      fetch(`/get/${type}`)
+        .then(raw => raw.json())
+        .then(function (response) {
+          response.forEach(function (con) {
+            document.querySelector(".left .connections").innerHTML += `
+          <div onclick="openChat('${type}','${type === 'groups' ? con.groupname : con.username}','${con.profileImg}','${type === 'groups' ? con._id : ''}')" class="user mt-3 flex gap-2 items-center ">
+                 <div class="profileImg h-10 aspect-square bg-red-500 rounded-full overflow-hidden">
+                    <img src="/images/${con.profileImg}" alt="" class="h-full w-full object-cover">
+                 </div>
+                 <div class="details -mt-1">
+                    <h1 class="leading-5 text-white md:text-base  text-[2.3vw]">${type === 'groups' ? con.groupname : con.username}</h1>
+                   <p class="leading-5  text-white md:text-xs text-[1.5vw]">Last Message</p>
+                 </div>
+               </div>
+          `;
+          })
+        })
+    }
+
+
+  </script>
+
+</body>
+
+</html>

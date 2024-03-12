@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div class="flex min-h-screen bg-zinc-800 flex-col  justify-center px-6 py-12 lg:px-8 ">
+    <div class="sm:mx-auto sm:w-full sm:max-w-sm ">
+        <img class="mx-auto h-fit" src="https://imgs.search.brave.com/qDQi6EEujRLsccRbadRvhzUeSd8tu0x86aF2jkZPSO4/rs:fit:500:0:0/g:ce/aHR0cHM6Ly93d3cu/cG5nYWxsLmNvbS93/cC1jb250ZW50L3Vw/bG9hZHMvMjAxNi8w/NC9XaGF0c0FwcC1G/cmVlLURvd25sb2Fk/LVBORy5wbmc" alt="Your Company">
+      <h2 class="text-center text-2xl font-bold tracking-tight text-white">Sign in to your account</h2>
+
+    </div>
+  
+    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+      <form class="space-y-6" action="/login" method="POST">
+          <div class="mt-2">
+            <input id="username" placeholder="username" name="username" type="text" autocomplete="username" required class="block w-full rounded-md border-0 py-1.5 px-2 outline-none shadow-sm sm:text-sm sm:leading-6">
+          </div>
+
+
+          <div class="mt-2">
+            <input id="password" placeholder="password" name="password" type="password" autocomplete="current-password" required class="block w-full rounded-md border-0 py-1.5 px-2 outline-none shadow-sm sm:text-sm sm:leading-6">
+          </div>
+  
+          <button type="submit" class="flex w-full justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign in</button>
+        </div>
+      </form>
+  
+      <p class="mt-10 text-center text-sm text-gray-500">
+        Not a member?
+        <a href="/" class="font-semibold leading-6 text-emerald-500 hover:text-emerald-700">Register</a>
+      </p>
+    </div>
+  </div>
+  
+</body>
+</html>
+
+
+
+
