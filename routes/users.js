@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const plm =require('passport-local-mongoose');
 
-mongoose.connect("mongodb+srv://devraj:devraj%40123@internshalaapiclone.91qzarm.mongodb.net//miniWhatsapp");
+mongoose.connect("mongodb+srv://devraj:Devraj@123@internshalaapiclone.91qzarm.mongodb.net//miniWhatsapp");
 
 const userSchema = mongoose.Schema({
   username: String,
