@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session')
 const passport = require('passport')
-
+const MongoStore = require('connect-mongo');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
@@ -18,7 +18,15 @@ app.set('view engine', 'ejs');
 app.use(session({
   resave:false,
   saveUninitialized:false,
-  secret: 'keyboard cat'
+  secret: 'keyboard cat',
+  store: MongoStore.create({
+    mongoUrl: 'mongodb+srv://Devraj123:Devraj%40123@internshalaapiclone.91qzarm.mongodb.net/miniWhatsapp', // MongoDB URI
+    collectionName: 'sessions', // Where session data will be stored
+    ttl: 14 * 24 * 60 * 60, // Session expiration time (14 days)
+  }),
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24, // 1 day in milliseconds
+  }
 }))
 app.use(passport.initialize())
 app.use(passport.session())
